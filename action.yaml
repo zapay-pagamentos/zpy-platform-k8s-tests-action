@@ -1,5 +1,5 @@
-name: 'Check PR Title'
-description: 'Check if PR title is valid'
+name: 'Execute tests'
+description: 'Execute tests on python'
 inputs:
   doppler-token-tests:
     description: 'Doppler token for tests'
