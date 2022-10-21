@@ -1,0 +1,57 @@
+name: 'Check PR Title'
+description: 'Check if PR title is valid'
+inputs:
+  doppler-token-tests:
+    description: 'Doppler token for tests'
+    required: true
+  python-version:
+    description: 'Python version'
+    required: true
+  pypi-user:
+    description: 'PyPi user'
+    required: true
+  python-password:
+    description: 'PyPi password'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ inputs.python-version }}
+    - name: Install host dependencies
+      shell: bash
+      run: sudo apt update && sudo apt-get install -y locales locales-all libcurl4-openssl-dev libssl-dev
+    - name: Cache pip
+      uses: actions/cache@v3
+      with:
+        path: /opt/hostedtoolcache/Python/${{ inputs.python-version }}/x64/
+        key: python${{ inputs.python-version }}-${{ runner.os }}-requirements-${{ hashFiles('requirements.txt') }}
+    - name: Install Dependencies
+      env:
+        PYPI_USER: ${{ inputs.pypi_user }}
+        PYPI_PASSWORD: ${{ inputs.pypi_password }}
+      shell: bash
+      run: |
+        pip install poetry
+        poetry config virtualenvs.create false
+        poetry config http-basic.zapay-pypi $PYPI_USER $PYPI_PASSWORD
+        poetry install --no-interaction --no-ansi -vvv
+    - name: Tests
+      env:
+        DOPPLER_TOKEN: ${{ inputs.doppler-token-tests }}
+      shell: bash
+      run: |
+        echo Installing Doppler
+        (curl -Ls https://cli.doppler.com/install.sh || wget -qO- https://cli.doppler.com/install.sh) | sudo bash
+        echo Doppler Installed
+        echo Running Tests
+        doppler run -- pytest --cov --cov-report xml:coverage.xml
+    - name: Upload coverage to the next step
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-${{ github.run_id }}
+        path: coverage.xml
