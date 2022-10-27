@@ -10,7 +10,7 @@ inputs:
   pypi-user:
     description: 'PyPi user'
     required: true
-  python-password:
+  pypi-password:
     description: 'PyPi password'
     required: true
 
@@ -32,8 +32,8 @@ runs:
         key: python${{ inputs.python-version }}-${{ runner.os }}-requirements-${{ hashFiles('requirements.txt') }}
     - name: Install Dependencies
       env:
-        PYPI_USER: ${{ inputs.pypi_user }}
-        PYPI_PASSWORD: ${{ inputs.pypi_password }}
+        PYPI_USER: ${{ inputs.pypi-user }}
+        PYPI_PASSWORD: ${{ inputs.pypi-password }}
       shell: bash
       run: |
         pip install poetry
