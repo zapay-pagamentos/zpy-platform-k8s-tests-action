@@ -29,7 +29,7 @@ runs:
       uses: actions/cache@v3
       with:
         path: /opt/hostedtoolcache/Python/${{ inputs.python-version }}/x64/
-        key: python${{ inputs.python-version }}-${{ runner.os }}-requirements-${{ hashFiles('requirements.txt') }}
+        key: python${{ inputs.python-version }}-${{ runner.os }}-poetry-${{ hashFiles('poetry.lock') }}
     - name: Install Dependencies
       env:
         PYPI_USER: ${{ inputs.pypi-user }}
