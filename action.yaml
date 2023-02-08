@@ -13,7 +13,10 @@ inputs:
   pypi-password:
     description: 'PyPi password'
     required: true
-
+  all_extras:
+    description: 'Install All Extras'
+    required: false
+    default: 'false'
 runs:
   using: "composite"
   steps:
@@ -39,7 +42,11 @@ runs:
         pip install poetry
         poetry config virtualenvs.create false
         poetry config http-basic.zapay-pypi $PYPI_USER $PYPI_PASSWORD
-        poetry install --no-interaction --no-ansi -vvv
+        if [ "${{ inputs.all_extras }}" = "true" ]; then
+          poetry install --all-extras --no-interaction --no-ansi -vvv
+        else
+          poetry install --no-interaction --no-ansi -vvv
+        fi
     - name: Tests
       env:
         DOPPLER_TOKEN: ${{ inputs.doppler-token-tests }}
