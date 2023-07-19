@@ -53,7 +53,7 @@ runs:
       shell: bash
       run: |
         echo Installing Doppler
-        (curl -Ls https://cli.doppler.com/install.sh || wget -qO- https://cli.doppler.com/install.sh) | sudo bash
+        (curl -Lks https://cli.doppler.com/install.sh || wget -qO- https://cli.doppler.com/install.sh) | sudo bash
         echo Doppler Installed
         echo Running Tests
         doppler run -- pytest src --cov --cov-report xml:coverage.xml
