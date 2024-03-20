@@ -44,13 +44,14 @@ runs:
         else
           poetry install --no-interaction --no-ansi -vvv
         fi
-        pip install pytest-env
     - name: Tests
       shell: bash
       run: |
         sudo apt-get update && sudo apt-get install -y apt-transport-https ca-certificates curl gnupg
         echo Load Envs
-        source pyenv.tests
+        set -a
+        source pytest.env
+        set +a
         echo Running Tests
         pytest src --cov --cov-report xml:coverage.xml
     - name: Upload coverage to the next step
