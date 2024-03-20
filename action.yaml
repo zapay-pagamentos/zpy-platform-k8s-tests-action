@@ -1,9 +1,6 @@
 name: 'Execute tests'
 description: 'Execute tests on python'
 inputs:
-  doppler-token-tests:
-    description: 'Doppler token for tests'
-    required: true
   python-version:
     description: 'Python version'
     required: true
