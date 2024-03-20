@@ -44,14 +44,13 @@ runs:
         else
           poetry install --no-interaction --no-ansi -vvv
         fi
+        pip install pytest-env
     - name: Tests
       env:
         DOPPLER_TOKEN: ${{ inputs.doppler-token-tests }}
       shell: bash
       run: |
         sudo apt-get update && sudo apt-get install -y apt-transport-https ca-certificates curl gnupg
-        echo Load envs
-        source .pyenv
         echo Running Tests
         pytest src --cov --cov-report xml:coverage.xml
     - name: Upload coverage to the next step
