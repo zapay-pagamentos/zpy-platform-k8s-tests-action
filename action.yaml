@@ -14,6 +14,23 @@ inputs:
     description: 'Install All Extras'
     required: false
     default: 'false'
+  sonar-version:
+    description: 'Sonar version'
+    required: true
+  sonar-token:
+    description: 'Sonar token'
+    required: true
+  sonar-url:
+    description: 'Sonar URl'
+    required: true
+  strict:
+    description: 'Strict mode'
+    required: false
+    default: 'true'
+  project-version:
+    description: 'Version of project'
+    required: false
+    default: 'latest'
 runs:
   using: "composite"
   steps:
@@ -59,3 +76,30 @@ runs:
       with:
         name: coverage-${{ github.run_id }}
         path: coverage.xml
+    - name: Sonar Cache
+      uses: actions/cache@v3
+      with:
+        path: /opt/hostedtoolcache/sonar-scanner
+        key: sonar-scanner-${{ runner.os }}-${{ runner.arch }}-${{ inputs.sonar-version }}
+    - name: Setup sonarqube
+      uses: warchant/setup-sonar-scanner@v3
+      with:
+        version: ${{ inputs.sonar-version }}
+    - name: Download coverage
+      if: inputs.coverage == 'true'
+      uses: actions/download-artifact@v3
+      with:
+        name: coverage-${{ github.run_id }}
+        path: .
+    - name: SonarQube Scan
+      shell: bash
+      run: sonar-scanner -Dsonar.projectBaseDir=. -Dsonar.projectVersion=$PROJECT_VERSION
+      env:
+        SONAR_TOKEN: ${{ inputs.sonar-token }}
+        SONAR_HOST_URL: ${{ inputs.sonar-url }}
+        PROJECT_VERSION: ${{ inputs.project-version }}
+    - name: Sonar Check
+      uses: sonarsource/sonarqube-quality-gate-action@master
+      continue-on-error: ${{ inputs.strict == 'false' }}
+      env:
+        SONAR_TOKEN: ${{ inputs.sonar-token }}
