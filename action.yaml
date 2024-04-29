@@ -59,7 +59,7 @@ runs:
         sudo apt-get update && sudo apt-get install doppler
         echo Doppler Installed
         echo Running Tests
-        doppler run -- pytest src --cov --cov-report xml:coverage.xml
+        doppler run -- pytest src --cov --cov-config setup.cfg --cov-report xml:coverage.xml
     - name: Upload coverage to the next step
       uses: actions/upload-artifact@v3
       with:
