@@ -1,9 +1,6 @@
 name: 'Execute tests'
 description: 'Execute tests on python'
 inputs:
-  doppler-token-tests:
-    description: 'Doppler token for tests'
-    required: true
   python-version:
     description: 'Python version'
     required: true
@@ -17,6 +14,23 @@ inputs:
     description: 'Install All Extras'
     required: false
     default: 'false'
+  sonar-version:
+    description: 'Sonar version'
+    required: true
+  sonar-token:
+    description: 'Sonar token'
+    required: true
+  sonar-url:
+    description: 'Sonar URl'
+    required: true
+  strict:
+    description: 'Strict mode'
+    required: false
+    default: 'true'
+  project-version:
+    description: 'Version of project'
+    required: false
+    default: 'latest'
 runs:
   using: "composite"
   steps:
@@ -48,20 +62,44 @@ runs:
           poetry install --no-interaction --no-ansi -vvv
         fi
     - name: Tests
-      env:
-        DOPPLER_TOKEN: ${{ inputs.doppler-token-tests }}
       shell: bash
       run: |
-        echo Installing Doppler
         sudo apt-get update && sudo apt-get install -y apt-transport-https ca-certificates curl gnupg
-        curl -sLf --retry 3 --tlsv1.2 --proto "=https" 'https://packages.doppler.com/public/cli/gpg.DE2A7741A397C129.key' | sudo gpg --dearmor -o /usr/share/keyrings/doppler-archive-keyring.gpg
-        echo "deb [signed-by=/usr/share/keyrings/doppler-archive-keyring.gpg] https://packages.doppler.com/public/cli/deb/debian any-version main" | sudo tee /etc/apt/sources.list.d/doppler-cli.list
-        sudo apt-get update && sudo apt-get install doppler
-        echo Doppler Installed
+        echo Load Envs
+        set -a
+        source pytest.env
+        set +a
         echo Running Tests
-        doppler run -- pytest src --cov --cov-config setup.cfg --cov-report xml:coverage.xml
+        pytest src --cov --cov-config setup.cfg --cov-report xml:coverage.xml
     - name: Upload coverage to the next step
       uses: actions/upload-artifact@v3
       with:
         name: coverage-${{ github.run_id }}
         path: coverage.xml
+    - name: Sonar Cache
+      uses: actions/cache@v3
+      with:
+        path: /opt/hostedtoolcache/sonar-scanner
+        key: sonar-scanner-${{ runner.os }}-${{ runner.arch }}-${{ inputs.sonar-version }}
+    - name: Setup sonarqube
+      uses: warchant/setup-sonar-scanner@v3
+      with:
+        version: ${{ inputs.sonar-version }}
+    - name: Download coverage
+      if: inputs.coverage == 'true'
+      uses: actions/download-artifact@v3
+      with:
+        name: coverage-${{ github.run_id }}
+        path: .
+    - name: SonarQube Scan
+      shell: bash
+      run: sonar-scanner -Dsonar.projectBaseDir=. -Dsonar.projectVersion=$PROJECT_VERSION
+      env:
+        SONAR_TOKEN: ${{ inputs.sonar-token }}
+        SONAR_HOST_URL: ${{ inputs.sonar-url }}
+        PROJECT_VERSION: ${{ inputs.project-version }}
+    - name: Sonar Check
+      uses: sonarsource/sonarqube-quality-gate-action@master
+      continue-on-error: ${{ inputs.strict == 'false' }}
+      env:
+        SONAR_TOKEN: ${{ inputs.sonar-token }}
