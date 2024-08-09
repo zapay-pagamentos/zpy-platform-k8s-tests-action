@@ -7,6 +7,9 @@ inputs:
   python-version:
     description: 'Python version'
     required: true
+  org-github-token:
+    description: 'git token'
+    required: true
   pypi-user:
     description: 'PyPi user'
     required: true
@@ -102,7 +105,7 @@ runs:
     - uses: zapay-pagamentos/zpy-platform-k8s-sonar-action@v2
         name: sonarsource
         with:
-          sonar-token: ${{ secrets.SONAR_TOKEN }}
-          sonar-url: ${{ secrets.SONAR_HOST_URL }}
-          org-github-token: ${{ secrets.ORG_GITHUB_TOKEN }}
+          sonar-token: ${{inputs.sonar-token}}
+          sonar-url: ${{ inputs.sonar-url }}
+          org-github-token: ${{ inputs.org-github-token }}
           strict: ${{ inputs.strict }}
