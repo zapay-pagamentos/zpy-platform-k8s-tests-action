@@ -32,7 +32,7 @@ inputs:
   strict:
     description: 'Strict mode'
     required: false
-    default: 'true'
+    default: 'false'
   project-version:
     description: 'Version of project'
     required: false
