@@ -34,23 +34,36 @@ inputs:
     description: 'Version of project'
     required: false
     default: 'latest'
+  clean-run:
+    description: 'Run with tests'
+    type: boolean
+    required: false
+    default: false
 runs:
   using: "composite"
   steps:
     - uses: actions/checkout@v3
     - name: Set up Python
+      if: |
+        inputs.clean-run == false
       uses: actions/setup-python@v4
       with:
         python-version: ${{ inputs.python-version }}
     - name: Install host dependencies
+      if: |
+        inputs.clean-run == false
       shell: bash
       run: sudo apt update && sudo apt-get install -y locales locales-all libcurl4-openssl-dev libssl-dev
     - name: Cache pip
+      if: |
+        inputs.clean-run == false
       uses: actions/cache@v3
       with:
         path: /opt/hostedtoolcache/Python/${{ inputs.python-version }}/x64/
         key: python${{ inputs.python-version }}-${{ runner.os }}-poetry-${{ hashFiles('poetry.lock') }}
     - name: Install Dependencies
+      if: |
+        inputs.clean-run == false
       env:
         PYPI_USER: ${{ inputs.pypi-user }}
         PYPI_PASSWORD: ${{ inputs.pypi-password }}
@@ -65,6 +78,8 @@ runs:
           poetry install --no-interaction --no-ansi -vvv
         fi
     - name: Tests
+      if: |
+        inputs.clean-run == false
       env:
         DOPPLER_TOKEN: ${{ inputs.doppler-token-tests }}
       shell: bash
@@ -78,34 +93,16 @@ runs:
         echo Running Tests
         doppler run -- pytest src --cov --cov-report xml:coverage.xml
     - name: Upload coverage to the next step
+      if: |
+        inputs.clean-run == false
       uses: actions/upload-artifact@v3
       with:
         name: coverage-${{ github.run_id }}
         path: coverage.xml
-    - name: Sonar Cache
-      uses: actions/cache@v3
-      with:
-        path: /opt/hostedtoolcache/sonar-scanner
-        key: sonar-scanner-${{ runner.os }}-${{ runner.arch }}-${{ inputs.sonar-version }}
-    - name: Setup sonarqube
-      uses: warchant/setup-sonar-scanner@v3
-      with:
-        version: ${{ inputs.sonar-version }}
-    - name: Download coverage
-      if: inputs.coverage == 'true'
-      uses: actions/download-artifact@v3
-      with:
-        name: coverage-${{ github.run_id }}
-        path: .
-    - name: SonarQube Scan
-      shell: bash
-      run: sonar-scanner -Dsonar.projectBaseDir=. -Dsonar.projectVersion=$PROJECT_VERSION
-      env:
-        SONAR_TOKEN: ${{ inputs.sonar-token }}
-        SONAR_HOST_URL: ${{ inputs.sonar-url }}
-        PROJECT_VERSION: ${{ inputs.project-version }}
-    - name: Sonar Check
-      uses: sonarsource/sonarqube-quality-gate-action@master
-      continue-on-error: ${{ inputs.strict == 'false' }}
-      env:
-        SONAR_TOKEN: ${{ inputs.sonar-token }}
+    - uses: zapay-pagamentos/zpy-platform-k8s-sonar-action@v2
+        name: sonarsource
+        with:
+          sonar-token: ${{ secrets.SONAR_TOKEN }}
+          sonar-url: ${{ secrets.SONAR_HOST_URL }}
+          org-github-token: ${{ secrets.ORG_GITHUB_TOKEN }}
+          strict: ${{ inputs.strict }}
