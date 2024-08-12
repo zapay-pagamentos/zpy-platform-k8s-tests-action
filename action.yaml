@@ -29,7 +29,7 @@ inputs:
   sonar-url:
     description: 'Sonar URl'
     required: true
-  strict:
+  continue-on-error:
     description: 'Strict mode'
     required: false
     default: false
@@ -108,4 +108,4 @@ runs:
         sonar-token: ${{inputs.sonar-token}}
         sonar-url: ${{ inputs.sonar-url }}
         org-github-token: ${{ inputs.org-github-token }}
-        strict: ${{ inputs.strict }}
+        continue-on-error: ${{ inputs.continue-on-error }}
