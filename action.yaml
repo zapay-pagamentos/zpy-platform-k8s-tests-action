@@ -10,6 +10,9 @@ inputs:
   org-github-token:
     description: 'git token'
     required: true
+  github_token:
+    description: 'git token'
+    required: true
   pypi-user:
     description: 'PyPi user'
     required: true
@@ -109,3 +112,4 @@ runs:
         sonar-url: ${{ inputs.sonar-url }}
         org-github-token: ${{ inputs.org-github-token }}
         continue-on-error: ${{ inputs.continue-on-error }}
+        github_token: ${{inputs.github_token}}
