@@ -81,14 +81,7 @@ runs:
         PYPI_PASSWORD: ${{ inputs.pypi-password }}
       shell: bash
       run: |
-        pip install poetry
-        poetry config virtualenvs.create false
-        poetry config http-basic.zapay-pypi $PYPI_USER $PYPI_PASSWORD
-        if [ "${{ inputs.all_extras }}" = "true" ]; then
-          poetry install --all-extras --no-interaction --no-ansi -vvv
-        else
-          poetry install --no-interaction --no-ansi -vvv
-        fi
+        pip install -r requirements.txt
     - name: Tests
       if: |
         inputs.clean-run == 'false'
