@@ -113,7 +113,7 @@ runs:
         path: coverage.xml
     - uses: zapay-pagamentos/zpy-platform-k8s-sonar-action@v2
       if: |
-        inputs.sonar-bypass == false
+        inputs.sonar-bypass == 'false'
       name: sonarsource
       with:
         sonar-token: ${{inputs.sonar-token}}
