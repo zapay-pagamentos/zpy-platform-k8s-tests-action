@@ -39,6 +39,11 @@ inputs:
     type: boolean
     required: false
     default: false
+  sonar-bypass:
+    description: 'Sonar bypass'
+    type: boolean
+    required: false
+    default: false
 runs:
   using: "composite"
   steps:
@@ -99,6 +104,8 @@ runs:
         name: coverage-${{ github.run_id }}
         path: coverage.xml
     - uses: zapay-pagamentos/zpy-platform-k8s-sonar-action@v2
+      if: |
+        inputs.sonar-bypass == false
       name: sonarsource
       with:
         sonar-token: ${{inputs.sonar-token}}
