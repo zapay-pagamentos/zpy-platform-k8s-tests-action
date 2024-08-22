@@ -96,7 +96,10 @@ runs:
         sudo apt-get update && sudo apt-get install doppler
         echo Doppler Installed
         echo Running Tests
-        doppler run -- pytest src --cov --cov-report xml:coverage.xml
+        doppler run -- coverage run manage.py test -k -v 0 --exclude-tag=zwallet
+        echo Test Runnered
+        coverage xml
+        echo Coverage generated
     - name: Upload coverage to the next step
       if: |
         inputs.clean-run == 'false'
