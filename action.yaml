@@ -65,7 +65,7 @@ runs:
       if: |
         inputs.clean-run == 'false'
       shell: bash
-      run: sudo apt update && sudo apt-get install -y locales locales-all libcurl4-openssl-dev libssl-dev
+      run: sudo apt update && sudo apt-get install -y locales locales-all libcurl4-openssl-dev libssl-dev libxml2-dev libxslt-dev python-dev
     - name: Cache pip
       if: |
         inputs.clean-run == 'false'
