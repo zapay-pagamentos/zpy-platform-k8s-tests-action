@@ -57,25 +57,25 @@ runs:
     - uses: actions/checkout@v3
     - name: Set up Python
       if: |
-        inputs.clean-run == false
+        inputs.clean-run == 'false'
       uses: actions/setup-python@v4
       with:
         python-version: ${{ inputs.python-version }}
     - name: Install host dependencies
       if: |
-        inputs.clean-run == false
+        inputs.clean-run == 'false'
       shell: bash
       run: sudo apt update && sudo apt-get install -y locales locales-all libcurl4-openssl-dev libssl-dev
     - name: Cache pip
       if: |
-        inputs.clean-run == false
+        inputs.clean-run == 'false'
       uses: actions/cache@v3
       with:
         path: /opt/hostedtoolcache/Python/${{ inputs.python-version }}/x64/
         key: python${{ inputs.python-version }}-${{ runner.os }}-poetry-${{ hashFiles('poetry.lock') }}
     - name: Install Dependencies
       if: |
-        inputs.clean-run == false
+        inputs.clean-run == 'false'
       env:
         PYPI_USER: ${{ inputs.pypi-user }}
         PYPI_PASSWORD: ${{ inputs.pypi-password }}
@@ -91,7 +91,7 @@ runs:
         fi
     - name: Tests
       if: |
-        inputs.clean-run == false
+        inputs.clean-run == 'false'
       env:
         DOPPLER_TOKEN: ${{ inputs.doppler-token-tests }}
       shell: bash
@@ -106,7 +106,7 @@ runs:
         doppler run -- pytest src --cov --cov-report xml:coverage.xml
     - name: Upload coverage to the next step
       if: |
-        inputs.clean-run == false
+        inputs.clean-run == 'false'
       uses: actions/upload-artifact@v3
       with:
         name: coverage-${{ github.run_id }}
