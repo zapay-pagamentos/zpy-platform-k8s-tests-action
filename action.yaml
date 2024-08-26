@@ -107,13 +107,34 @@ runs:
       with:
         name: coverage-${{ github.run_id }}
         path: coverage.xml
-    - uses: zapay-pagamentos/zpy-platform-k8s-sonar-action@v2
+    - name: Validate version
       if: |
         inputs.sonar-bypass == 'false'
-      name: sonarsource
+      id: validate-version
+      uses: zapay-pagamentos/zpy-platform-k8s-validate-version-action@v2
+    - name: Sonar Cache
+      if: |
+        inputs.sonar-bypass == 'false'
+      uses: actions/cache@v3
       with:
-        sonar-token: ${{inputs.sonar-token}}
-        sonar-url: ${{ inputs.sonar-url }}
-        org-github-token: ${{ inputs.org-github-token }}
-        continue-on-error: ${{ inputs.continue-on-error }}
-        github_token: ${{inputs.github_token}}
+        path: /opt/hostedtoolcache/sonar-scanner
+        key: sonar-scanner-${{ runner.os }}-${{ runner.arch }}-${{ steps.validate-version.outputs.versionCandidate }}
+    - name: SonarQube Scan
+      if: |
+        inputs.sonar-bypass == 'false'
+      uses: sonarsource/sonarqube-scan-action@master
+      env:
+        SONAR_TOKEN: ${{ inputs.sonar-token }}
+        SONAR_HOST_URL: ${{ inputs.sonar-url }}
+        PROJECT_VERSION: ${{ steps.validate-version.outputs.versionCandidate }}
+      with:
+        args: >
+          -Dsonar.projectVersion=${{ env.PROJECT_VERSION }}
+          -Dsonar.host.url=${{ inputs.sonar-url }}
+    - name: Sonar Check
+      if: |
+        inputs.continue-on-error == 'true' &&
+        inputs.sonar-bypass == 'false'
+      uses: sonarsource/sonarqube-quality-gate-action@master
+      env:
+        SONAR_TOKEN: ${{ inputs.sonar-token }}
