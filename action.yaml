@@ -113,24 +113,34 @@ runs:
       id: validate-version
       uses: zapay-pagamentos/zpy-platform-k8s-validate-version-action@v2
     - name: Sonar Cache
+      uses: actions/cache@v3
       if: |
         inputs.sonar-bypass == 'false'
-      uses: actions/cache@v3
       with:
         path: /opt/hostedtoolcache/sonar-scanner
         key: sonar-scanner-${{ runner.os }}-${{ runner.arch }}-${{ steps.validate-version.outputs.versionCandidate }}
+    - name: Setup sonarqube
+      if: |
+        inputs.sonar-bypass == 'false'
+      uses: warchant/setup-sonar-scanner@v3
+      with:
+        version: '4.7.0.2747'
+    - name: Download coverage
+      uses: actions/download-artifact@v3
+      if: |
+        inputs.sonar-bypass == 'false'
+      continue-on-error: true
+      with:
+        name: coverage-${{ github.run_id }}
+        path: .
     - name: SonarQube Scan
       if: |
         inputs.sonar-bypass == 'false'
-      uses: sonarsource/sonarqube-scan-action@master
+      shell: bash
+      run: sonar-scanner -Dsonar.projectBaseDir=. -Dsonar.projectVersion=${{ steps.validate-version.outputs.versionCandidate }}
       env:
         SONAR_TOKEN: ${{ inputs.sonar-token }}
         SONAR_HOST_URL: ${{ inputs.sonar-url }}
-        PROJECT_VERSION: ${{ steps.validate-version.outputs.versionCandidate }}
-      with:
-        args: >
-          -Dsonar.projectVersion=${{ env.PROJECT_VERSION }}
-          -Dsonar.host.url=${{ inputs.sonar-url }}
     - name: Sonar Check
       if: |
         inputs.continue-on-error == 'true' &&
