@@ -17,36 +17,23 @@ inputs:
     description: 'Install All Extras'
     required: false
     default: 'false'
-  detect-changes:
-    description: 'Enable detection of changed directories'
-    required: false
-    default: 'false'
-  base-directory:
-    description: 'Base directory to search for changes'
-    required: false
-    default: 'src'
-
 runs:
   using: "composite"
   steps:
     - name: Checkout code
       uses: actions/checkout@v4
-
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: ${{ inputs.python-version }}
-
     - name: Install host dependencies
       shell: bash
       run: sudo apt update && sudo apt-get install -y locales locales-all libcurl4-openssl-dev libssl-dev
-
     - name: Cache pip
       uses: actions/cache@v3
       with:
         path: /opt/hostedtoolcache/Python/${{ inputs.python-version }}/x64/
         key: python${{ inputs.python-version }}-${{ runner.os }}-poetry-${{ hashFiles('poetry.lock') }}
-
     - name: Install Dependencies
       env:
         PYPI_USER: ${{ inputs.pypi-user }}
@@ -61,54 +48,19 @@ runs:
         else
           poetry install --no-interaction --no-ansi -vvv
         fi
-
-    - name: Install Doppler
+    - name: Tests
+      env:
+        DOPPLER_TOKEN: ${{ inputs.doppler-token-tests }}
       shell: bash
       run: |
-        echo "Installing Doppler..."
-        sudo apt-get update
-        sudo apt-get install -y apt-transport-https ca-certificates curl gnupg
+        echo Installing Doppler
+        sudo apt-get update && sudo apt-get install -y apt-transport-https ca-certificates curl gnupg
         curl -sLf --retry 3 --tlsv1.2 --proto "=https" 'https://packages.doppler.com/public/cli/gpg.DE2A7741A397C129.key' | sudo gpg --dearmor -o /usr/share/keyrings/doppler-archive-keyring.gpg
         echo "deb [signed-by=/usr/share/keyrings/doppler-archive-keyring.gpg] https://packages.doppler.com/public/cli/deb/debian any-version main" | sudo tee /etc/apt/sources.list.d/doppler-cli.list
         sudo apt-get update && sudo apt-get install doppler
-
-    - name: Identify changed directories
-      if: ${{ inputs.detect-changes == 'true' }}
-      id: detect-changes
-      shell: bash
-      run: |
-        echo "Detecting changes in base directory: ${{ inputs.base-directory }}"
-        changed_files=$(git diff --name-only ${{ github.base_ref }}..${{ github.head_ref }} | grep "^${{ inputs.base-directory }}/" || true)
-        if [ -z "$changed_files" ]; then
-          echo "No changes detected."
-          echo "::set-output name=changed_dirs::"
-        else
-          changed_dirs=$(echo "$changed_files" | grep -oE '^${{ inputs.base-directory }}/[^/]*' | sort | uniq)
-          echo "Changed directories: $changed_dirs"
-          echo "::set-output name=changed_dirs::$changed_dirs"
-        fi
-
-    - name: Run Tests for Changed Directories
-      if: ${{ inputs.detect-changes == 'true' }}
-      env:
-        DOPPLER_TOKEN: ${{ inputs.doppler-token-tests }}
-      shell: bash
-      run: |
-        for dir in ${{ steps.detect-changes.outputs.changed_dirs }}
-        do
-          echo "Running tests for $dir..."
-          doppler run -- pytest $dir --cov --cov-report xml:coverage.xml || exit 1
-        done
-
-    - name: Run All Tests
-      if: ${{ inputs.detect-changes != 'true' }}
-      env:
-        DOPPLER_TOKEN: ${{ inputs.doppler-token-tests }}
-      shell: bash
-      run: |
-        echo "No change detection enabled. Running all tests."
-        doppler run -- pytest ${{ inputs.base-directory }} --cov --cov-report xml:coverage.xml
-
+        echo Doppler Installed
+        echo Running Tests
+        doppler run -- pytest src --cov --cov-report xml:coverage.xml
     - name: Upload coverage to the next step
       uses: actions/upload-artifact@v3
       with:
