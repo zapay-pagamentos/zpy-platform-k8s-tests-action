@@ -59,6 +59,7 @@ runs:
         fi
 
     - name: Install Doppler
+      shell: bash
       run: |
         echo "Installing Doppler..."
         sudo apt-get update
