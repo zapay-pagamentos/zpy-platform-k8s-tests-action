@@ -87,7 +87,7 @@ runs:
         version: ${{ inputs.sonar-version }}
     - name: Download coverage
       if: inputs.coverage == 'true'
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: coverage-${{ github.run_id }}
         path: .
