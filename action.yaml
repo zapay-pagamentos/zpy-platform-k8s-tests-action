@@ -92,7 +92,7 @@ runs:
       with:
         version: ${{ inputs.sonar-version }}
     - name: Download coverage
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: coverage-${{ github.run_id }}
         path: .
